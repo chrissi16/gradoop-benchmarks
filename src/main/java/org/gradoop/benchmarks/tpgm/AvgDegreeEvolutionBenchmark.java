@@ -18,9 +18,8 @@ package org.gradoop.benchmarks.tpgm;
 import org.apache.commons.cli.CommandLine;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.core.fs.FileSystem;
-import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.flink.model.impl.operators.sampling.functions.VertexDegree;
 import org.gradoop.temporal.model.api.TimeDimension;
 import org.gradoop.temporal.model.impl.TemporalGraph;
@@ -45,10 +44,6 @@ public class AvgDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
    */
   private static final String OPTION_TIME_DIMENSION = "t";
   /**
-   * Option to enable considering the vertex time information (requires an additional join in the pipeline)
-   */
-  private static final String OPTION_VERTEX_TIME = "v";
-  /**
    * The degree type (IN, OUT or BOTH).
    */
   private static String DEGREE_TYPE;
@@ -56,17 +51,11 @@ public class AvgDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
    * The time dimension to consider (VALID_TIME or TRANSACTION_TIME)
    */
   private static String TIME_DIMENSION;
-  /**
-   * A flag to decide whether to include the vertex time information or not.
-   */
-  private static boolean INCLUDE_VERTEX_TIME;
 
   static {
     OPTIONS.addRequiredOption(OPTION_DEGREE_TYPE, "degreeType", true, "The degree type (IN, OUT or BOTH).");
     OPTIONS.addRequiredOption(OPTION_TIME_DIMENSION, "dimension", true,
-    "The time dimension (VALID_TIME or TRANSACTION_TIME)");
-    OPTIONS.addOption(OPTION_VERTEX_TIME, "includeVertexTime", false,
-    "Does the vertex time needs to be included?");
+          "The time dimension (VALID_TIME or TRANSACTION_TIME)");
   }
 
   /**
@@ -89,7 +78,6 @@ public class AvgDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
     readBaseCMDArguments(cmd);
     DEGREE_TYPE = cmd.getOptionValue(OPTION_DEGREE_TYPE);
     TIME_DIMENSION = cmd.getOptionValue(OPTION_TIME_DIMENSION);
-    INCLUDE_VERTEX_TIME = cmd.hasOption(OPTION_VERTEX_TIME);
 
     // parse arguments
     VertexDegree degreeType = VertexDegree.valueOf(DEGREE_TYPE);
@@ -103,16 +91,15 @@ public class AvgDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
 
     // init the operator
     AvgDegreeEvolution operator = new AvgDegreeEvolution(degreeType, timeDimension);
-    operator.setIncludeVertexTime(INCLUDE_VERTEX_TIME);
 
     // apply operator
-    DataSet<Tuple4<GradoopId, Long, Long, Integer>> results = temporalGraph.callForValue(operator);
+    DataSet<Tuple2<Long, Double>> results = temporalGraph.callForValue(operator);
 
     // write results
     results.writeAsCsv(OUTPUT_PATH, FileSystem.WriteMode.OVERWRITE);
 
     env.execute(AvgDegreeEvolutionBenchmark.class.getSimpleName()+ " (" + degreeType + "," + timeDimension + "," +
-    (INCLUDE_VERTEX_TIME ? "with VertexTime" : "w/o VertexTime") + ") - P: " + env.getParallelism());
+          ") - P: " + env.getParallelism());
 
     writeCSV(env);
   }
@@ -124,10 +111,10 @@ public class AvgDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
    * @throws IOException exception during file writing
    */
   private static void writeCSV(ExecutionEnvironment env) throws IOException {
-    String head = String.format("%s|%s|%s|%s|%s|%s", "Parallelism", "dataset", "degreeType", "timeDimension",
-    "vertexTimeIncluded", "Runtime(s)");
-    String tail = String.format("%s|%s|%s|%s|%b|%s", env.getParallelism(), INPUT_PATH, DEGREE_TYPE,
-    TIME_DIMENSION, INCLUDE_VERTEX_TIME, env.getLastJobExecutionResult().getNetRuntime(TimeUnit.SECONDS));
+    String head = String.format("%s|%s|%s|%s|%s", "Parallelism", "dataset", "degreeType", "timeDimension",
+          "Runtime(s)");
+    String tail = String.format("%s|%s|%s|%s|%s", env.getParallelism(), INPUT_PATH, DEGREE_TYPE,
+          TIME_DIMENSION, env.getLastJobExecutionResult().getNetRuntime(TimeUnit.SECONDS));
     writeToCSVFile(head, tail);
   }
 }

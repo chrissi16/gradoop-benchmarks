@@ -19,24 +19,21 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.core.fs.FileSystem;
-import org.gradoop.common.model.impl.id.GradoopId;
 import org.gradoop.flink.model.impl.operators.sampling.functions.VertexDegree;
 import org.gradoop.temporal.model.api.TimeDimension;
 import org.gradoop.temporal.model.impl.TemporalGraph;
 import org.gradoop.temporal.model.impl.operators.metric.MaxDegreeEvolution;
-import org.gradoop.temporal.model.impl.operators.metric.TemporalVertexDegree;
 import org.gradoop.temporal.util.TemporalGradoopConfig;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Dedicated program to benchmark the temporal degree operator. The benchmark is expected to be executed on
+ * Dedicated program to benchmark the max degree evolution operator. The benchmark is expected to be executed on
  * a temporal graph dataset.
  */
-public class MaxDegreeBenchmark extends BaseTpgmBenchmark {
+public class MaxDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
 
   /**
    * Option to declare the degree type (in, out or both).
@@ -101,7 +98,8 @@ public class MaxDegreeBenchmark extends BaseTpgmBenchmark {
     // write results
     results.writeAsCsv(OUTPUT_PATH, FileSystem.WriteMode.OVERWRITE);
 
-    env.execute(TemporalDegreeBenchmark.class.getSimpleName()+ " (" + degreeType + "," + timeDimension + "," + ") - P: " + env.getParallelism());
+    env.execute(MaxDegreeEvolutionBenchmark.class.getSimpleName()+ " (" + degreeType + "," + timeDimension + "," +
+          ") - P: " + env.getParallelism());
 
     writeCSV(env);
   }
