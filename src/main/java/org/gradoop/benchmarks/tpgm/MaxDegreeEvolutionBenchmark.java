@@ -61,7 +61,7 @@ public class MaxDegreeEvolutionBenchmark extends BaseTpgmBenchmark {
   /**
    * Main program to run the benchmark.
    * <p>
-   * Example: {@code $ /path/to/flink run -c org.gradoop.benchmarks.tpgm.MaxDegreeBenchmark
+   * Example: {@code $ /path/to/flink run -c org.gradoop.benchmarks.tpgm.MaxDegreeEvolutionBenchmark
    * /path/to/gradoop-benchmarks.jar -i hdfs:///graph -o hdfs:///output -c results.csv -d BOTH -t VALID_TIME}
    *
    * @param args program arguments
